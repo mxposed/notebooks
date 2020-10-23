@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <link type="text/css" rel="stylesheet" href="main.css"/>
+    <script src="sprintf.js"></script>
+    <script src="main.js"></script>
+    <title>Rebalancing single-cell pool with preliminary sequencing run</title>
+</head>
+<body><article>
+    <h1>Rebalancing single-cell pool with preliminary sequencing run</h1>
+    <p>
+        Single-cell libraries are often too small to be sequenced on high-end flowcells.
+        Doing this would result in wasteful sequencing depth, i.e. high
+        <a href="https://kb.10xgenomics.com/hc/en-us/articles/115005062366-What-is-sequencing-saturation-">sequencing saturation</a>.
+    </p>
+    <p>
+        To overcome this, multiple libraries are loaded on one high-end flowcell, to distribute
+        the number of reads between libraries and achieve desired sequencing depth.
+    </p>
+    <p>
+        To gain more control over resulting sequencing depth, we can use low-end flowcell run
+        to estimate library quality and composition, and adjust the proportion of each library in the pool.
+    </p>
+    <h2>Example</h2>
+    <p>
+        We have 4 libraries: <var data-id="library"></var>.
+        We sequenced them on low-end flowcell and got the following results:
+    </p>
+    <section>
+        <table>
+            <thead>
+                <td data-id="library"></td>
+                <td class="adjustable" data-id="cells_no" data-min="500" data-max="10000" data-step="500">Number of cells</td>
+                <td class="adjustable" data-id="reads_pr" data-min="1" data-max="100" data-step="1">Proportion of reads</td>
+                <td data-id="reads_no" data-format="%.0f">Number of reads</td>
+                <td data-id="depth" data-format="%.1f">Mean reads per cell</td>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+        <p>
+            You can change the value of green numbers by dragging them left or right
+             and see how the resulting calculations are affected.
+        </p>
+        <figure>
+            <div data-plot="library,cells_no" data-ylabel="Number of cells"></div>
+            <div data-plot="library,reads_no" data-ylabel="Number of reads"></div>
+            <div data-plot="library,depth" data-ylabel="Depth"></div>
+        </figure>
+    </section>
+    <h2>Loading factor</h2>
+    <p>
+        After the preliminary run, we compute loading factors for the libraries.
+        In <a href="https://emea.support.illumina.com/content/dam/illumina-marketing/documents/products/appnotes/single-cell-library-qc-app-note-770-2019-029.PDF">Illumina report</a>
+        this is done either by <var data-name="reads_no"></var>
+        or by sequencing <var data-name="depth"></var>.
+    </p>
+    <ul data-role="select">
+        <li class="selected"><var data-name="loading_factor"></var> = max(<var data-name="reads_no"></var>) / <var data-name="reads_no"></var></li>
+        <li><var data-name="loading_factor"></var> = max(<var data-name="depth"></var>) / <var data-name="depth"></var></li>
+        <li><var data-name="loading_factor"></var> = <input type="text"/></li>
+    </ul>
+    <p>
+        You can select how the <var data-name="loading_factor"></var> is
+        computed and see how the resulting calculations are affected.
+    </p>
+    <h2>Result</h2>
+    <section>
+        <table>
+            <thead>
+                <td data-id="library"></td>
+                <td data-id="cells_no">Number of cells</td>
+                <td data-id="loading_factor" data-format="%.3f">Loading factor</td>
+                <td data-id="new_reads" data-format="%.0f">New reads</td>
+                <td data-id="adjusted_depth" data-format="%.1f">New depth</td>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </section>
+    <p>
+        With the assumption that loading factor will linearly adjust the number of reads
+        each library gets, we can look at the projected distribution of the 2 key metrics.
+    </p>
+    <figure>
+        <div data-plot="library,reads_no|new_reads" data-ylabel="Number of reads"></div>
+        <div data-plot="library,depth|adjusted_depth" data-ylabel="Depth"></div>
+    </figure>
+</article>
+<script type="text/javascript">
+const data = {
+    library: ["L1", "L2", "L3", "L4"],
+    cells_no: [1000, 1000, 2000, 2000],
+    reads_pr: [3, 2, 3, 2],
+    total_reads: 40000000
+};
+const formulae = {
+    depth: "reads_no / cells_no",
+    reads_fr: "reads_pr / sum(reads_pr)",
+    reads_no: "reads_fr * total_reads",
+    new_reads: "reads_no * loading_factor",
+    adjusted_depth: "new_reads / cells_no"
+};
+const model = new Model(data, formulae);
+const ctx = new IManager(model);
+ctx.initElements($("article")[0]);
+ctx.draw();
+</script>
+</body>
+</html>

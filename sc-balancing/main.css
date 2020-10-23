@@ -1,0 +1,213 @@
+html, body {
+    background: white;
+    margin: 0;
+    padding: 0;
+    font: 16px Helvetica;
+}
+
+article {
+    margin: 50px 0;
+    padding: 0 400px 0 100px;
+    width: 700px;
+    color: #333;
+}
+
+article section {
+    margin-right: 150px;
+}
+
+article p {
+    margin-right: 150px;
+}
+
+article table {
+    margin-right: 150px;
+    width: 100%;
+}
+
+h1, h2, h3 {
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    font-weight: normal;
+    margin: 1em 0 0 0;
+    text-indent: -0.5em;
+}
+
+h1 {
+    font-size: 140%;
+}
+
+h2 {
+    font-size: 120%;
+}
+
+a {
+    text-decoration:none;
+    font-weight:normal;
+    color: #2695fd;
+    border:none;
+}
+
+a:hover {
+    text-decoration:underline;
+    color: #0f7499;
+}
+
+p {
+    display: block;
+    margin: 0.2em 0 1em 0;
+    /* line-height: 1.2em; */
+}
+
+tt {
+    font-family: Monaco, 'Courier New', monospace;
+}
+
+section {
+    position: relative;
+}
+
+figure {
+    width: 500px;
+    margin: 0;
+}
+
+section>figure {
+    position: absolute;
+    top: 0;
+    left: 600px;
+    width: 350px;
+    margin: 0;
+}
+
+figure>div {
+    margin-bottom: 20px;
+    background: gray;
+    height: 150px;
+}
+
+table {
+    margin: 0.2em 0 1em 0;
+    border-collapse: collapse;
+}
+
+table td {
+    margin: 0;
+    padding: 0.2em 0 0.2em 0.4em;
+    text-align: right;
+}
+
+ul[data-role=select] {
+    margin: 0.2em 0 1em 1.5em;
+    padding: 0;
+    list-style-type: none;
+    overflow: hidden;
+}
+
+ul[data-role=select] li {
+    margin: 0 0 0.2em 20px;
+    padding: 3px;
+    opacity: 0.5;
+    cursor: pointer;
+    float: left;
+    clear: left;
+    border-radius: 4px;
+}
+
+ul[data-role=select] li:before {
+    content: "☞ ";
+    color: #333;
+    font-size: 20px;
+    line-height: 16px;
+    vertical-align: middle;
+    visibility: hidden;
+}
+
+ul[data-role=select] li var {
+    cursor: pointer;
+}
+
+ul[data-role=select] li.hovering {
+    opacity: 1;
+    background: #ded;
+}
+
+ul[data-role=select] li.selected {
+    opacity: 1;
+    background: white;
+    cursor: default;
+}
+
+ul[data-role=select] li.selected var {
+    cursor: default;
+}
+
+ul[data-role=select] li.hovering:before {
+    color: #0cb304;
+    visibility: visible;
+}
+
+ul[data-role=select] li.selected:before {
+    visibility: visible;
+    color: #333;
+}
+
+ul[data-role=select] li input {
+    width: 200px;
+}
+
+var {
+    font-style: normal;
+}
+
+var.token {
+    display: inline-block;
+    text-align: center;
+    line-height: 1em;
+    padding-left: 8px;
+    padding-right: 8px;
+    padding-top: 2px;
+    padding-bottom: 1px;
+    border-radius: 20px;
+    border: 1px solid #85abbd;
+    background-color: #91b9cc;
+    color: #fff;
+    cursor: default;
+    font-size: 14px;
+}
+
+.token.hovering {
+    background-color: #5f9bb6;
+    border-color: #6a828e;
+}
+
+.outlet {
+    padding-left: 1px;
+    padding-right: 1px;
+    color: #2695fd;
+    white-space: nowrap;
+    cursor: default;
+}
+
+.outlet.hovering {
+    background-color: #4eabff;
+    color: #fff;
+}
+
+.TKCursorDragHorizontal {
+    cursor: pointer;
+    cursor: move;
+    cursor: col-resize !important;
+}
+
+.adjustable-number {
+    color: #0dbe04;
+    white-space:nowrap;
+}
+.adjustable-number.hovering {
+    background-color: #e4ffed;
+    color: #0cb304;
+}
+.adjustable-number.dragging {
+    background-color: #66c563;
+    color: #fff;
+}
