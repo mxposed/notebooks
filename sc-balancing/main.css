@@ -58,6 +58,11 @@ p {
     /* line-height: 1.2em; */
 }
 
+p.subtitle {
+    color: darkgray;
+    text-align: right;
+}
+
 tt {
     font-family: Monaco, 'Courier New', monospace;
 }

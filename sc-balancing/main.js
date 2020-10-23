@@ -68,6 +68,8 @@ function makeTouchable(el, delegate) {
     initialize();
 };
 
+//  End Touchable.js
+
 const $List = function(list) {
     this.nodes = list;
 };
