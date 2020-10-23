@@ -19,22 +19,22 @@
     </p>
     <p class="subtitle">Nikolay Markov, October 2020</p>
     <p>
-        Single-cell libraries are often too small to be sequenced on high-end flowcells.
+        Single-cell libraries are often too small to be sequenced on high-output flowcells.
         Doing this would result in wasteful sequencing depth, i.e. high
         <a href="https://kb.10xgenomics.com/hc/en-us/articles/115005062366-What-is-sequencing-saturation-">sequencing saturation</a>.
     </p>
     <p>
-        To overcome this, multiple libraries are loaded on one high-end flowcell, to distribute
+        To overcome this, multiple libraries are loaded on one high-output flowcell, to distribute
         the number of reads between libraries and achieve desired sequencing depth.
     </p>
     <p>
-        To gain more control over resulting sequencing depth, we can use low-end flowcell run
+        To gain more control over resulting sequencing depth, we can use low-output flowcell run
         to estimate library quality and composition, and adjust the proportion of each library in the pool.
     </p>
     <h2>Example</h2>
     <p>
         We have 4 libraries: <var data-id="library"></var>.
-        We sequenced them on low-end flowcell and got the following results:
+        We sequenced them on low-output flowcell and got the following results:
     </p>
     <section>
         <table>
