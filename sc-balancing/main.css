@@ -52,6 +52,10 @@ a:hover {
     color: #0f7499;
 }
 
+.hg {
+    margin-right: -.3em;
+}
+
 p {
     display: block;
     margin: 0.2em 0 1em 0;
