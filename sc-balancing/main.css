@@ -16,7 +16,7 @@ article section {
     margin-right: 150px;
 }
 
-article p {
+article>p {
     margin-right: 150px;
 }
 
