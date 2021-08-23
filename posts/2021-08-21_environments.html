@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <link type="text/css" rel="stylesheet" href="main.css"/>
+    <title>Pitfalls and lessons of package environment management</title>
+</head>
+<body><article>
+    <h1>Pitfalls and lessons of package environment management</h1>
+    <p class="subtitle">
+        Only a paleface can step on the same rake twice<br/>
+        <i>Russian proverb</i>
+    </p>
+    <p class="subtitle">Nikolay Markov, August 2021</p>
+    <p>
+        The idea of project environment comes naturally when you set out to maintain
+        computational reproducibility. And reproducibility is a must, I think, for any
+        scientific publication. Yes, there are various degrees of reproducibility,
+        however I find it beneficial to strive for the exact from the beginning and then,
+        hopefully, get at least some, by the end.
+    </p>
+    <p>
+        For projects that heavily rely on external (written by other people) software,
+        computational reproducibility is <em>not</em> a trivial task, and should not
+        be treated lightly. Here I will share a few lessons I learned and pitfalls
+        I encountered during my last two years of running projects in bioinformatics.
+    </p>
+    <p>
+        TL/DR:
+    </p>
+    <ol>
+        <li>Use <tt><a href="https://pypi.org/project/pip-tools/">pip-tools</a></tt> for Python</li>
+        <li>Use <tt><a href="https://rstudio.github.io/renv/index.html">renv</a></tt> for R with settings <tt>snapshot.type="all"</tt>,
+            <tt>use.cache=FALSE</tt></li>
+        <li>Use version control and commit often</li>
+        <li>Start all of this before you write your first line of code</li>
+    </ol>
+    <h2>Background: Managing external code</h2>
+    <p>
+        It is great to write code and see it help you with analyses and your work.
+        However, it's impossible to write all the code ourselves, and so we reuse code written
+        by other people. We have less control over such code, and it's more challenging to
+        keep it consistent with the project over time.
+    </p>
+    <p>
+        Fortunately, modern programming languages come with package management software and
+        infrascrtucture. Kind people make packages out of their useful code, put it online,
+        where it is versioned, archived, and you can download it easily. Each <b>package</b> has
+        a number of <b>versions</b>, and each version has <b>dependencies</b>: a list of
+        other packages that are needed for this package to function, sometimes with version
+        restrictions (e.g. version should be exactly "1.2" or newer than "3.4").
+    </p>
+    <p>
+        The problems come with time: packages change, improve, get deprecated… Each new version
+        of a package can change that part of the code that you use, can add new dependencies
+        or remove old ones, and so with time the probability that your code will not give
+        you the same results as it did increase, as does the probability that your code will
+        stop working.
+    </p>
+    <p>
+        The solution is to write down all the packages that your project uses, including
+        recursive dependencies, along with their versions. Starting another project, you would
+        write down a new list, that is independent from the first, because likely you
+        will want to make changes to them separately. This is called a <b>virtual environment</b>
+        (or project environment). In R a tool for virtual environments is
+        <tt><a href="https://rstudio.github.io/renv/index.html">renv</a></tt>. In Python
+        there is a built-in module
+        <tt><a href="https://docs.python.org/3/library/venv.html">venv</a></tt>.
+    </p>
+    <h2>Pitfalls with <tt>renv</tt></h2>
+    <p>
+        Problems with virtual environments do not become apparent right away. Only when couple
+        of months have passed and you want to return to a project, you can discover that
+        something isn't working as you expected.
+    </p>
+    <p>
+        I didn't realize that <tt>renv</tt> default behaviour, probably inherited from
+        <tt>packrat</tt>, is to discover packages to write down by analyzing your code.
+        This is controlled by the settings <tt>snapshot.type</tt> and I strongly recommend
+        setting it to <tt>"all"</tt>. This will record every package that is installed in the
+        current project.
+    </p>
+    <p>
+        I had several common functions extracted into a separate shared repository. I&nbsp;included
+        those files with <tt>source("https://github.com/…")</tt>, and <tt>renv</tt> didn't
+        follow that to discover packages included from there. A few important packages didn't
+        have their versions recorded.
+    </p>
+    <p>
+        Another nuance with <tt>renv</tt> is that it by default install packages into a common
+        space (cache), from which it links them (symlink) to the projects. While it sounds
+        good in theory, and does save time, I discovered that after some operations some of
+        those symlinks get broken. I don't know what exactly triggers it, but <tt>renv</tt>
+        isn't very gracious at restoring or reinstalling those missing packages.
+    </p>
+    <p>
+        While this needs further investigation from me, I currently set to not use this common
+        cache, and recommend the same to you. This is controlled by <tt>use.cache</tt> setting.
+    </p>
+    <h2>Pitfalls with <tt>pipenv</tt></h2>
+    <p>
+        Python's <tt>venv</tt> module only provides a separate space where you can install
+        the project's packages. It doesn't, however, record installed packages along with their
+        versions as <tt>renv</tt> does. People use different tools and approaches to record
+        and keep track of packages and versions. Initially, I used
+        <tt><a href="https://pipenv.pypa.io/en/latest/">pipenv</a></tt> for that.
+    </p>
+    <p>
+        After several months of working with the initial setup of the project's packages,
+        I needed to add a new dependecy. It was very hard to convince <tt>pipenv</tt> to
+        not update my other packages in the project. I tried several combinations of
+        parameters to do that, and one of them resulted in an incompatible versions of
+        packages being installed without any warning or issue.
+    </p>
+    <p>
+        I encountered the same situation couple more times and switched to <tt>pip-tools</tt>,
+        which has a policy of keeping all installed package versions intact by default.
+        Several months have passed since then, and I haven't run into an issue with
+        this tool yet.
+    </p>
+    <h2></h2>
+</article></body>
+</html>
