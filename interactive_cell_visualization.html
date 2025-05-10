@@ -1,0 +1,1262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Cell Type Visualization</title>
+    <style>
+        html, body {
+    background: white;
+    margin: 0;
+    padding: 0;
+    font: 16px Helvetica;
+}
+
+article {
+    margin: 50px 0;
+    padding: 0 400px 0 100px;
+    width: 700px;
+    color: #333;
+}
+
+article section {
+    margin-right: 150px;
+}
+
+article>p {
+    margin-right: 150px;
+}
+
+article table {
+    margin-right: 150px;
+    width: 100%;
+}
+
+h1, h2, h3 {
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    font-weight: normal;
+    margin: 1em 0 0 0;
+    text-indent: -0.5em;
+}
+
+h1 {
+    font-size: 140%;
+}
+
+h2 {
+    font-size: 120%;
+}
+
+a {
+    text-decoration:none;
+    font-weight:normal;
+    color: #2695fd;
+    border:none;
+}
+
+a:hover {
+    text-decoration:underline;
+    color: #0f7499;
+}
+
+.hg {
+    margin-right: -.3em;
+}
+
+p {
+    display: block;
+    margin: 0.2em 0 1em 0;
+    /* line-height: 1.2em; */
+}
+
+p.subtitle {
+    color: darkgray;
+    text-align: right;
+}
+
+tt {
+    font-family: Monaco, 'Courier New', monospace;
+}
+
+section {
+    position: relative;
+}
+
+figure {
+    width: 500px;
+    margin: 0;
+}
+
+section>figure {
+    position: absolute;
+    top: 0;
+    left: 600px;
+    width: 350px;
+    margin: 0;
+}
+
+figure>div {
+    margin-bottom: 20px;
+    background: gray;
+    height: 150px;
+}
+
+table {
+    margin: 0.2em 0 1em 0;
+    border-collapse: collapse;
+}
+
+table td {
+    margin: 0;
+    padding: 0.2em 0 0.2em 0.4em;
+    text-align: right;
+}
+
+ul[data-role=select] {
+    margin: 0.2em 0 1em 1.5em;
+    padding: 0;
+    list-style-type: none;
+    overflow: hidden;
+}
+
+ul[data-role=select] li {
+    margin: 0 0 0.2em 20px;
+    padding: 3px;
+    opacity: 0.5;
+    cursor: pointer;
+    float: left;
+    clear: left;
+    border-radius: 4px;
+}
+
+ul[data-role=select] li:before {
+    content: "☞ ";
+    color: #333;
+    font-size: 20px;
+    line-height: 16px;
+    vertical-align: middle;
+    visibility: hidden;
+}
+
+ul[data-role=select] li var {
+    cursor: pointer;
+}
+
+ul[data-role=select] li.hovering {
+    opacity: 1;
+    background: #ded;
+}
+
+ul[data-role=select] li.selected {
+    opacity: 1;
+    background: white;
+    cursor: default;
+}
+
+ul[data-role=select] li.selected var {
+    cursor: default;
+}
+
+ul[data-role=select] li.hovering:before {
+    color: #0cb304;
+    visibility: visible;
+}
+
+ul[data-role=select] li.selected:before {
+    visibility: visible;
+    color: #333;
+}
+
+ul[data-role=select] li input {
+    width: 200px;
+}
+
+var {
+    font-style: normal;
+}
+
+var.token {
+    display: inline-block;
+    text-align: center;
+    line-height: 1em;
+    padding-left: 8px;
+    padding-right: 8px;
+    padding-top: 2px;
+    padding-bottom: 1px;
+    border-radius: 20px;
+    border: 1px solid #85abbd;
+    background-color: #91b9cc;
+    color: #fff;
+    cursor: default;
+    font-size: 14px;
+}
+
+.token.hovering {
+    background-color: #5f9bb6;
+    border-color: #6a828e;
+}
+
+.outlet {
+    padding-left: 1px;
+    padding-right: 1px;
+    color: #2695fd;
+    white-space: nowrap;
+    cursor: default;
+}
+
+.outlet.hovering {
+    background-color: #4eabff;
+    color: #fff;
+}
+
+.TKCursorDragHorizontal {
+    cursor: pointer;
+    cursor: move;
+    cursor: col-resize !important;
+}
+
+.adjustable-number {
+    color: #0dbe04;
+    white-space:nowrap;
+}
+.adjustable-number.hovering {
+    background-color: #e4ffed;
+    color: #0cb304;
+}
+.adjustable-number.dragging {
+    background-color: #66c563;
+    color: #fff;
+}
+
+        .container {
+            display: flex;
+            flex-direction: row;
+        }
+        .chart-container {
+            margin-right: 30px;
+        }
+        .stats-container {
+            min-width: 400px;
+        }
+        .bar-chart {
+            display: flex;
+            height: 300px;
+            max-height: 300px;
+            align-items: flex-end;
+        }
+        .sample-group {
+            display: flex;
+            align-items: flex-end;
+            user-select: none;
+        }
+        .sample {
+            width: 40px;
+            margin: 0 5px;
+            position: relative;
+            user-select: none;
+        }
+        .group-separator {
+            width: 20px;
+        }
+        .cell-count-bar {
+            background-color: #ddd;
+            width: 100%;
+            cursor: ns-resize;
+            user-select: none;
+        }
+        .proportion-bar {
+            width: 100%;
+            height: 200px;
+            position: relative;
+            border: 1px solid #333;
+            user-select: none;
+        }
+        .cell-type {
+            width: 100%;
+            position: absolute;
+        }
+        .handle {
+            width: 100%;
+            height: 4px;
+            background-color: #333;
+            position: absolute;
+            cursor: ns-resize;
+            z-index: 10;
+        }
+        .cell-type-0 { background-color: rgba(31, 119, 180, 0.5); }
+        .cell-type-0.highlight { background-color: rgba(31, 119, 180, 0.9); }
+        .cell-type-1 { background-color: rgba(255, 127, 14, 0.5); }
+        .cell-type-1.highlight { background-color: rgba(255, 127, 14, 0.9); }
+        .cell-type-2 { background-color: rgba(44, 160, 44, 0.5); }
+        .cell-type-2.highlight { background-color: rgba(44, 160, 44, 0.9); }
+        .cell-type-3 { background-color: rgba(214, 39, 40, 0.5); }
+        .cell-type-3.highlight { background-color: rgba(214, 39, 40, 0.9); }
+
+        .legend {
+            margin-top: 20px;
+            display: flex;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-right: 20px;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            margin-right: 5px;
+        }
+
+        .stats-container {
+            margin-left: 20px;
+        }
+
+        .boxplot-container {
+            margin: 10px 0 20px 0;
+        }
+
+        .boxplot {
+            height: 250px;
+            position: relative;
+        }
+
+        .boxplot-group {
+            display: inline-block;
+            width: 80px;
+            margin: 0 5px;
+        }
+
+        .box {
+            width: 40px;
+            position: absolute;
+            border: 1px solid black;
+            margin-left: 20px;
+        }
+
+        .whisker {
+            width: 1px;
+            background-color: black;
+            position: absolute;
+            margin-left: 40px;
+        }
+
+        .median {
+            width: 40px;
+            height: 1px;
+            background-color: black;
+            position: absolute;
+            margin-left: 20px;
+        }
+
+        .data-point {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            position: absolute;
+            z-index: 5;
+        }
+
+        .outlier {
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background-color: black;
+            position: absolute;
+            margin-left: 38px;
+        }
+
+        h2, h3 {
+            margin-top: 30px;
+        }
+
+        .p-value {
+            margin-top: 5px;
+            font-size: 0.9em;
+        }
+        .cell-number {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 12px;
+        }
+
+        .cell-count-bar.highlight {
+            background-color: #555;
+        }
+
+        .data-point.highlight {
+            background-color: #ff6666 !important;
+            border: 1px solid #cc0000;
+            width: 10px;
+            height: 10px;
+            z-index: 10;
+            transform: translate(-2px, -2px);
+        }
+
+        .data-tooltip {
+            position: absolute;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            pointer-events: none;
+            white-space: nowrap;
+            z-index: 100;
+            visibility: hidden;
+            transform: translate(-50%, -125%);
+        }
+    </style>
+</head>
+<body><article>
+    <h1>Cell type abundance for niche analysis</h1>
+    <p class="subtitle">Nikolay Markov, May 2025</p>
+
+    <p>
+        In spatial transcriptomics we can discover spatial niches and quantify the contribution of
+        different cell types to these niches. How exactly to perform statistical testing of these
+        contributions between two groups of samples is an open question. Here is an interactive
+        exploration of the data and the two simple statistical tests that can be used for this
+        comparison.
+    </p>
+
+    <p>
+        Drag the bars to change the cell counts and proportions of cell types. The boxplots
+        will update automatically, and the results of Mann-Whitney U test will be shown below.
+    </p>
+
+    <div class="container">
+        <div class="chart-container">
+            <h2>Cell numbers per sample</h2>
+            <p>
+                Drag the bars to change cell counts in samples.
+            </p>
+            <div class="bar-chart" id="cellCountChart" style="height: 250px;">
+                <div class="sample-group" style="height: 200px;">
+                    <!-- Group 1 cell count bars -->
+                    <div class="sample">
+                        <div class="cell-count-bar" id="cellCount-0" style="height: 150px;"></div>
+                        <div>S1</div>
+                    </div>
+                    <div class="sample">
+                        <div class="cell-count-bar" id="cellCount-1" style="height: 180px;"></div>
+                        <div>S2</div>
+                    </div>
+                    <div class="sample">
+                        <div class="cell-count-bar" id="cellCount-2" style="height: 120px;"></div>
+                        <div>S3</div>
+                    </div>
+                    <div class="sample">
+                        <div class="cell-count-bar" id="cellCount-3" style="height: 200px;"></div>
+                        <div>S4</div>
+                    </div>
+                    <div class="sample">
+                        <div class="cell-count-bar" id="cellCount-4" style="height: 160px;"></div>
+                        <div>S5</div>
+                    </div>
+                    <div class="sample">
+                        <div class="cell-count-bar" id="cellCount-5" style="height: 140px;"></div>
+                        <div>S6</div>
+                    </div>
+                </div>
+                <div class="group-separator"></div>
+                <div class="sample-group" style="height: 200px;">
+                    <!-- Group 2 cell count bars -->
+                    <div class="sample">
+                        <div class="cell-count-bar" id="cellCount-6" style="height: 170px;"></div>
+                        <div>S7</div>
+                    </div>
+                    <div class="sample">
+                        <div class="cell-count-bar" id="cellCount-7" style="height: 190px;"></div>
+                        <div>S8</div>
+                    </div>
+                    <div class="sample">
+                        <div class="cell-count-bar" id="cellCount-8" style="height: 130px;"></div>
+                        <div>S9</div>
+                    </div>
+                    <div class="sample">
+                        <div class="cell-count-bar" id="cellCount-9" style="height: 155px;"></div>
+                        <div>S10</div>
+                    </div>
+                </div>
+            </div>
+
+            <h2>Cell type proportions</h2>
+            <p>
+                Drag the dividers to change the proportions of cell types in each sample.
+            </p>
+            <div class="bar-chart" id="proportionChart" style="height: 250px;">
+                <div class="sample-group">
+                    <!-- Group 1 stacked bars -->
+                    <div class="sample">
+                        <div class="proportion-bar" id="proportion-0">
+                            <div class="cell-type cell-type-0" style="height: 25%; top: 0%;"></div>
+                            <div class="cell-type cell-type-1" style="height: 30%; top: 25%;"></div>
+                            <div class="cell-type cell-type-2" style="height: 20%; top: 55%;"></div>
+                            <div class="cell-type cell-type-3" style="height: 25%; top: 75%;"></div>
+                            <div class="handle" style="top: 25%;"></div>
+                            <div class="handle" style="top: 55%;"></div>
+                            <div class="handle" style="top: 75%;"></div>
+                        </div>
+                        <div>S1</div>
+                    </div>
+                    <div class="sample">
+                        <div class="proportion-bar" id="proportion-1">
+                            <div class="cell-type cell-type-0" style="height: 20%; top: 0%;"></div>
+                            <div class="cell-type cell-type-1" style="height: 35%; top: 20%;"></div>
+                            <div class="cell-type cell-type-2" style="height: 25%; top: 55%;"></div>
+                            <div class="cell-type cell-type-3" style="height: 20%; top: 80%;"></div>
+                            <div class="handle" style="top: 20%;"></div>
+                            <div class="handle" style="top: 55%;"></div>
+                            <div class="handle" style="top: 80%;"></div>
+                        </div>
+                        <div>S2</div>
+                    </div>
+                    <div class="sample">
+                        <div class="proportion-bar" id="proportion-2">
+                            <div class="cell-type cell-type-0" style="height: 30%; top: 0%;"></div>
+                            <div class="cell-type cell-type-1" style="height: 25%; top: 30%;"></div>
+                            <div class="cell-type cell-type-2" style="height: 15%; top: 55%;"></div>
+                            <div class="cell-type cell-type-3" style="height: 30%; top: 70%;"></div>
+                            <div class="handle" style="top: 30%;"></div>
+                            <div class="handle" style="top: 55%;"></div>
+                            <div class="handle" style="top: 70%;"></div>
+                        </div>
+                        <div>S3</div>
+                    </div>
+                    <div class="sample">
+                        <div class="proportion-bar" id="proportion-3">
+                            <div class="cell-type cell-type-0" style="height: 15%; top: 0%;"></div>
+                            <div class="cell-type cell-type-1" style="height: 30%; top: 15%;"></div>
+                            <div class="cell-type cell-type-2" style="height: 35%; top: 45%;"></div>
+                            <div class="cell-type cell-type-3" style="height: 20%; top: 80%;"></div>
+                            <div class="handle" style="top: 15%;"></div>
+                            <div class="handle" style="top: 45%;"></div>
+                            <div class="handle" style="top: 80%;"></div>
+                        </div>
+                        <div>S4</div>
+                    </div>
+                    <div class="sample">
+                        <div class="proportion-bar" id="proportion-4">
+                            <div class="cell-type cell-type-0" style="height: 10%; top: 0%;"></div>
+                            <div class="cell-type cell-type-1" style="height: 25%; top: 10%;"></div>
+                            <div class="cell-type cell-type-2" style="height: 40%; top: 35%;"></div>
+                            <div class="cell-type cell-type-3" style="height: 25%; top: 75%;"></div>
+                            <div class="handle" style="top: 10%;"></div>
+                            <div class="handle" style="top: 35%;"></div>
+                            <div class="handle" style="top: 75%;"></div>
+                        </div>
+                        <div>S5</div>
+                    </div>
+                    <div class="sample">
+                        <div class="proportion-bar" id="proportion-5">
+                            <div class="cell-type cell-type-0" style="height: 35%; top: 0%;"></div>
+                            <div class="cell-type cell-type-1" style="height: 20%; top: 35%;"></div>
+                            <div class="cell-type cell-type-2" style="height: 15%; top: 55%;"></div>
+                            <div class="cell-type cell-type-3" style="height: 30%; top: 70%;"></div>
+                            <div class="handle" style="top: 35%;"></div>
+                            <div class="handle" style="top: 55%;"></div>
+                            <div class="handle" style="top: 70%;"></div>
+                        </div>
+                        <div>S6</div>
+                    </div>
+                </div>
+
+                <div class="group-separator"></div>
+
+                <div class="sample-group">
+                    <!-- Group 2 stacked bars -->
+                    <div class="sample">
+                        <div class="proportion-bar" id="proportion-6">
+                            <div class="cell-type cell-type-0" style="height: 40%; top: 0%;"></div>
+                            <div class="cell-type cell-type-1" style="height: 20%; top: 40%;"></div>
+                            <div class="cell-type cell-type-2" style="height: 10%; top: 60%;"></div>
+                            <div class="cell-type cell-type-3" style="height: 30%; top: 70%;"></div>
+                            <div class="handle" style="top: 40%;"></div>
+                            <div class="handle" style="top: 60%;"></div>
+                            <div class="handle" style="top: 70%;"></div>
+                        </div>
+                        <div>S7</div>
+                    </div>
+                    <div class="sample">
+                        <div class="proportion-bar" id="proportion-7">
+                            <div class="cell-type cell-type-0" style="height: 45%; top: 0%;"></div>
+                            <div class="cell-type cell-type-1" style="height: 15%; top: 45%;"></div>
+                            <div class="cell-type cell-type-2" style="height: 20%; top: 60%;"></div>
+                            <div class="cell-type cell-type-3" style="height: 20%; top: 80%;"></div>
+                            <div class="handle" style="top: 45%;"></div>
+                            <div class="handle" style="top: 60%;"></div>
+                            <div class="handle" style="top: 80%;"></div>
+                        </div>
+                        <div>S8</div>
+                    </div>
+                    <div class="sample">
+                        <div class="proportion-bar" id="proportion-8">
+                            <div class="cell-type cell-type-0" style="height: 35%; top: 0%;"></div>
+                            <div class="cell-type cell-type-1" style="height: 25%; top: 35%;"></div>
+                            <div class="cell-type cell-type-2" style="height: 15%; top: 60%;"></div>
+                            <div class="cell-type cell-type-3" style="height: 25%; top: 75%;"></div>
+                            <div class="handle" style="top: 35%;"></div>
+                            <div class="handle" style="top: 60%;"></div>
+                            <div class="handle" style="top: 75%;"></div>
+                        </div>
+                        <div>S9</div>
+                    </div>
+                    <div class="sample">
+                        <div class="proportion-bar" id="proportion-9">
+                            <div class="cell-type cell-type-0" style="height: 30%; top: 0%;"></div>
+                            <div class="cell-type cell-type-1" style="height: 30%; top: 30%;"></div>
+                            <div class="cell-type cell-type-2" style="height: 20%; top: 60%;"></div>
+                            <div class="cell-type cell-type-3" style="height: 20%; top: 80%;"></div>
+                            <div class="handle" style="top: 30%;"></div>
+                            <div class="handle" style="top: 60%;"></div>
+                            <div class="handle" style="top: 80%;"></div>
+                        </div>
+                        <div>S10</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color cell-type-0"></div>
+                    <div>Cell Type A</div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color cell-type-1"></div>
+                    <div>Cell Type B</div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color cell-type-2"></div>
+                    <div>Cell Type C</div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color cell-type-3"></div>
+                    <div>Cell Type D</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats-container">
+            <h2>Cell type proportions within sample</h2>
+            <div class="boxplot-container" id="group-boxplots">
+                <!-- Boxplots will be generated here -->
+            </div>
+
+            <h2>Cell type proportions of total number of cells</h2>
+            <div class="boxplot-container" id="overall-boxplots">
+                <!-- Boxplots will be generated here -->
+            </div>
+        </div>
+    </div></article>
+
+    <script>
+        // Initial data
+        const samples = 10;
+        const cellTypes = 4;
+        const group1Size = 6;
+        const group2Size = 4;
+
+        // Cell count data (adjustable)
+        let cellCounts = [150, 180, 120, 200, 160, 140, 170, 190, 130, 155];
+        const minCellCount = 10;
+        const maxCellCount = 1000;
+        const cellCountBarHeight = 200; // Fixed height for the bar chart container
+        // Store data point positions for all box plots
+        const dataPointPositions = {
+            group: {}, // Will store left positions for each group and cell type
+            overall: {}
+        };
+
+        // Cell proportion data
+        let proportions = [
+            [0.25, 0.30, 0.20, 0.25], // Sample 1
+            [0.20, 0.35, 0.25, 0.20], // Sample 2
+            [0.30, 0.25, 0.15, 0.30], // Sample 3
+            [0.15, 0.30, 0.35, 0.20], // Sample 4
+            [0.10, 0.25, 0.40, 0.25], // Sample 5
+            [0.35, 0.20, 0.15, 0.30], // Sample 6
+            [0.40, 0.20, 0.10, 0.30], // Sample 7
+            [0.45, 0.15, 0.20, 0.20], // Sample 8
+            [0.35, 0.25, 0.15, 0.25], // Sample 9
+            [0.30, 0.30, 0.20, 0.20]  // Sample 10
+        ];        // Function to update all cell count bar heights based on current cellCounts array
+        function updateCellCountBars() {
+            // Find the maximum cell count
+            const currentMaxCount = Math.max(...cellCounts);
+
+            // Scale factor to convert counts to pixel heights (max height = cellCountBarHeight)
+            const scaleFactor = cellCountBarHeight / currentMaxCount;
+
+            // Update all bars
+            for (let i = 0; i < samples; i++) {
+                const bar = document.getElementById(`cellCount-${i}`);
+                const scaledHeight = Math.round(cellCounts[i] * scaleFactor);
+                bar.style.height = scaledHeight + 'px';
+
+                // Update the count display text
+                const cellCountNode = bar.parentNode.querySelector('.cell-number');
+                if (cellCountNode) {
+                    cellCountNode.innerText = cellCounts[i];
+                }
+            }
+
+            // Make sure both groups have the same container height
+            document.querySelectorAll('.sample-group').forEach(group => {
+                group.style.height = cellCountBarHeight + 'px';
+            });
+        }
+
+        // Function to make cell count bars draggable
+        function setupCellCountDrag() {
+            // Add mousedown event to prevent text selection during dragging
+            document.addEventListener('mousedown', function(e) {
+                if (e.target.classList.contains('cell-count-bar') ||
+                    e.target.classList.contains('handle')) {
+                    e.preventDefault();
+                    document.body.style.userSelect = 'none';
+                }
+            });
+
+            // Add mouseup event to restore text selection
+            document.addEventListener('mouseup', function() {
+                document.body.style.userSelect = '';
+            });
+
+            // Create tooltips container
+            const tooltipContainer = document.createElement('div');
+            tooltipContainer.id = 'tooltips-container';
+            document.body.appendChild(tooltipContainer);
+
+            for (let i = 0; i < samples; i++) {
+                const bar = document.getElementById(`cellCount-${i}`);
+                const cellCountNode = document.createElement('div');
+                cellCountNode.className = 'cell-number';
+                cellCountNode.innerText = cellCounts[i];
+                bar.parentNode.insertBefore(cellCountNode, bar);
+
+                // Create tooltip elements for this bar
+                const groupTooltip = document.createElement('div');
+                groupTooltip.className = 'data-tooltip';
+                groupTooltip.id = `group-tooltip-${i}`;
+                tooltipContainer.appendChild(groupTooltip);
+
+                const overallTooltip = document.createElement('div');
+                overallTooltip.className = 'data-tooltip';
+                overallTooltip.id = `overall-tooltip-${i}`;
+                tooltipContainer.appendChild(overallTooltip);
+
+                // Add hover events for highlighting
+                bar.addEventListener('mouseenter', function() {
+                    highlightSample(i, true);
+                });
+
+                bar.addEventListener('mouseleave', function() {
+                    highlightSample(i, false);
+                });
+
+                bar.addEventListener('mousedown', function(e) {
+                    const startY = e.clientY;
+                    const startHeight = parseInt(bar.style.height);
+                    const startCount = cellCounts[i];
+
+                    // Find the current maximum cell count for scaling
+                    const currentMaxCount = Math.max(...cellCounts);
+                    const heightToCountRatio = currentMaxCount / cellCountBarHeight;
+
+                    function onMouseMove(e) {
+                        // Calculate new height based on mouse movement
+                        const heightDelta = startY - e.clientY;
+                        const countDelta = Math.round(heightDelta * heightToCountRatio);
+
+                        // Calculate new cell count and constrain to min/max
+                        const newCount = Math.max(minCellCount, Math.min(maxCellCount, startCount + countDelta));
+
+                        // Update the cell count
+                        cellCounts[i] = newCount;
+                        cellCountNode.innerText = newCount;
+
+                        // Update all bars to maintain proper scaling
+                        updateCellCountBars();
+
+                        // Update stats
+                        updateStats();
+
+                        // Keep highlight during drag
+                        highlightSample(i, true);
+                    }
+
+                    function onMouseUp(e) {
+                        document.removeEventListener('mousemove', onMouseMove);
+                        document.removeEventListener('mouseup', onMouseUp);
+
+                        // Check if mouse is still over the bar after dragging ends
+                        const barRect = bar.getBoundingClientRect();
+                        const isOverBar = (
+                            e.clientX >= barRect.left &&
+                            e.clientX <= barRect.right &&
+                            e.clientY >= barRect.top &&
+                            e.clientY <= barRect.bottom
+                        );
+
+                        // Only keep highlighting if mouse is still over the bar
+                        if (!isOverBar) {
+                            highlightSample(i, false);
+                        }
+                    }
+
+                    document.addEventListener('mousemove', onMouseMove);
+                    document.addEventListener('mouseup', onMouseUp);
+                });
+            }
+        }
+
+        // Function to highlight a sample and its corresponding data points
+        function highlightSample(sampleIndex, highlight) {
+            // Highlight the cell count bar
+            const bar = document.getElementById(`cellCount-${sampleIndex}`);
+            if (highlight) {
+                bar.classList.add('highlight');
+            } else {
+                bar.classList.remove('highlight');
+            }
+
+            // Highlight Cell Type A in the proportion bar
+            const proportionBar = document.getElementById(`proportion-${sampleIndex}`);
+            if (proportionBar) {
+                const cellTypeA = proportionBar.querySelector('.cell-type-0');
+                if (cellTypeA) {
+                    if (highlight) {
+                        cellTypeA.classList.add('highlight');
+                    } else {
+                        cellTypeA.classList.remove('highlight');
+                    }
+                }
+            }
+
+            // Highlight corresponding data points in boxplots and show tooltips
+            const dataPoints = document.querySelectorAll(`.data-point[data-sample-index="${sampleIndex}"]`);
+            dataPoints.forEach(point => {
+                if (highlight) {
+                    point.classList.add('highlight');
+
+                    // Get container info to determine if it's a group or overall boxplot
+                    const boxplotArea = point.closest('.boxplot');
+                    const isGroupBoxplot = boxplotArea && boxplotArea.closest('#group-boxplots');
+
+                    // Show tooltip with value
+                    const tooltipId = isGroupBoxplot ?
+                        `group-tooltip-${sampleIndex}` :
+                        `overall-tooltip-${sampleIndex}`;
+
+                    const tooltip = document.getElementById(tooltipId);
+                    if (tooltip) {
+                        const isGroupA = sampleIndex < group1Size ? "Group 1" : "Group 2";
+                        const sampleNumber = isGroupA == "Group 1" ? sampleIndex + 1 : sampleIndex - group1Size + 1;
+
+                        // Show cell count and proportion information
+                        const cellCount = cellCounts[sampleIndex];
+                        const cellTypeProportion = proportions[sampleIndex][0]; // Cell Type A proportion
+                        const cellTypeCount = Math.round(cellCount * cellTypeProportion);
+
+                        tooltip.innerHTML = `
+                            value: ${point.dataset.value}
+                        `;
+                        tooltip.style.visibility = 'visible';
+
+                        // Position tooltip near the data point
+                        const pointRect = point.getBoundingClientRect();
+                        tooltip.style.left = (pointRect.left + pointRect.width/2) + 'px';
+                        tooltip.style.top = (pointRect.top) + 'px';
+                    }
+                } else {
+                    point.classList.remove('highlight');
+
+                    // Hide tooltips
+                    document.getElementById(`group-tooltip-${sampleIndex}`).style.visibility = 'hidden';
+                    document.getElementById(`overall-tooltip-${sampleIndex}`).style.visibility = 'hidden';
+                }
+            });
+        }
+
+        // Function to make proportion handles draggable
+        function setupProportionDrag() {
+            for (let i = 0; i < samples; i++) {
+                const bar = document.getElementById(`proportion-${i}`);
+                const handles = bar.querySelectorAll('.handle');
+                const cellTypeDivs = bar.querySelectorAll('.cell-type');
+
+                // Add hover events for cell type A (first cell type)
+                const cellTypeA = cellTypeDivs[0];
+                cellTypeA.addEventListener('mouseenter', function() {
+                    // Highlight cell type div
+                    cellTypeA.classList.add('highlight');
+                    // Highlight sample in boxplots
+                    highlightSample(i, true);
+                });
+
+                cellTypeA.addEventListener('mouseleave', function() {
+                    // Remove highlight from cell type div
+                    cellTypeA.classList.remove('highlight');
+                    // Remove highlight from boxplots
+                    highlightSample(i, false);
+                });
+
+                handles.forEach((handle, handleIndex) => {
+                    handle.addEventListener('mousedown', function(e) {
+                        e.preventDefault();
+                        const startY = e.clientY;
+                        const startTop = parseInt(handle.style.top);
+                        const barRect = bar.getBoundingClientRect();
+                        const barHeight = barRect.height;
+
+                        function onMouseMove(e) {
+                            const delta = e.clientY - startY;
+                            let newTop = Math.max(0, Math.min(100, startTop + delta / barHeight * 100));
+
+                            // Ensure handles don't cross each other
+                            if (handleIndex > 0) {
+                                const prevHandle = handles[handleIndex - 1];
+                                const prevTop = parseFloat(prevHandle.style.top);
+                                newTop = Math.max(newTop, prevTop);
+                            }
+
+                            if (handleIndex < handles.length - 1) {
+                                const nextHandle = handles[handleIndex + 1];
+                                const nextTop = parseFloat(nextHandle.style.top);
+                                newTop = Math.min(newTop, nextTop);
+                            }
+
+                            handle.style.top = newTop + '%';
+
+                            // Update the cell type divs
+                            updateCellTypeHeights(i);
+
+                            // Update proportions data
+                            updateProportionData(i);
+
+                            // Update stats
+                            updateStats();
+                        }
+
+                        function onMouseUp() {
+                            document.removeEventListener('mousemove', onMouseMove);
+                            document.removeEventListener('mouseup', onMouseUp);
+                        }
+
+                        document.addEventListener('mousemove', onMouseMove);
+                        document.addEventListener('mouseup', onMouseUp);
+                    });
+                });
+            }
+        }
+
+        // Update cell type heights based on handle positions
+        function updateCellTypeHeights(sampleIndex) {
+            const bar = document.getElementById(`proportion-${sampleIndex}`);
+            const handles = Array.from(bar.querySelectorAll('.handle'));
+            const cellTypeDivs = bar.querySelectorAll('.cell-type');
+
+            // Get handle positions
+            const positions = [0, ...handles.map(h => parseFloat(h.style.top)), 100];
+
+            // Update cell type divs
+            for (let i = 0; i < cellTypes; i++) {
+                const height = positions[i + 1] - positions[i];
+                const top = positions[i];
+
+                cellTypeDivs[i].style.height = height + '%';
+                cellTypeDivs[i].style.top = top + '%';
+            }
+        }
+
+        // Update proportion data based on visual elements
+        function updateProportionData(sampleIndex) {
+            const bar = document.getElementById(`proportion-${sampleIndex}`);
+            const handles = Array.from(bar.querySelectorAll('.handle'));
+
+            // Get handle positions
+            const positions = [0, ...handles.map(h => parseFloat(h.style.top)), 100];
+
+            // Update proportions array
+            for (let i = 0; i < cellTypes; i++) {
+                proportions[sampleIndex][i] = (positions[i + 1] - positions[i]) / 100;
+            }
+        }
+
+        // Function to calculate Mann-Whitney U test
+        function mannWhitneyUTest(group1, group2) {
+            const combined = [];
+
+            // Create combined array with values and group info
+            for (let i = 0; i < group1.length; i++) {
+                combined.push({ value: group1[i], group: 1 });
+            }
+
+            for (let i = 0; i < group2.length; i++) {
+                combined.push({ value: group2[i], group: 2 });
+            }
+
+            // Sort by value
+            combined.sort((a, b) => a.value - b.value);
+
+            // Assign ranks (handling ties)
+            let currentRank = 1;
+            for (let i = 0; i < combined.length; i++) {
+                let j = i;
+                while (j < combined.length - 1 && combined[j].value === combined[j + 1].value) {
+                    j++;
+                }
+
+                // If there are ties, assign average rank
+                if (j > i) {
+                    const averageRank = currentRank + (j - i) / 2;
+                    for (let k = i; k <= j; k++) {
+                        combined[k].rank = averageRank;
+                    }
+                    currentRank += (j - i + 1);
+                    i = j;
+                } else {
+                    combined[i].rank = currentRank++;
+                }
+            }
+
+            // Calculate U statistic
+            let rankSum1 = 0;
+            let rankSum2 = 0;
+
+            for (const item of combined) {
+                if (item.group === 1) {
+                    rankSum1 += item.rank;
+                } else {
+                    rankSum2 += item.rank;
+                }
+            }
+
+            const n1 = group1.length;
+            const n2 = group2.length;
+
+            const U1 = rankSum1 - (n1 * (n1 + 1)) / 2;
+            const U2 = rankSum2 - (n2 * (n2 + 1)) / 2;
+
+            const U = Math.min(U1, U2);
+
+            // For small sample sizes, calculate exact p-value
+            // For simplicity, we'll use an approximation
+            const mean = (n1 * n2) / 2;
+            const std = Math.sqrt((n1 * n2 * (n1 + n2 + 1)) / 12);
+
+            // Z-score approximation (valid for larger sample sizes)
+            const z = (U - mean) / std;
+
+            // Two-tailed p-value from normal distribution
+            const p = 2 * (1 - normalCDF(Math.abs(z)));
+
+            return p;
+        }
+
+        // Normal cumulative distribution function
+        function normalCDF(x) {
+            const t = 1 / (1 + 0.2316419 * Math.abs(x));
+            const d = 0.3989423 * Math.exp(-x * x / 2);
+            let prob = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
+            if (x > 0) {
+                prob = 1 - prob;
+            }
+            return prob;
+        }
+
+        // Function to create boxplots
+        function createBoxplot(container, data, cellTypeIndex, groupNames, isOverall = false) {
+            const boxplotHeight = 200;
+            container.innerHTML = '';
+
+            // Find global max value across all groups for proper scaling
+            const allValues = data.flat();
+            const globalMax = Math.max(...allValues);
+            // Add a 10% margin at the top
+            const scaleFactor = boxplotHeight / (globalMax * 1.1);
+
+            // Scale function that accounts for the maximum value
+            const scale = (value) => boxplotHeight - (value * scaleFactor);
+
+            // Get the correct positions storage based on type (group or overall)
+            const positionType = isOverall ? 'overall' : 'group';
+
+            // Initialize positions for this cell type if not already done
+            if (!dataPointPositions[positionType][cellTypeIndex]) {
+                dataPointPositions[positionType][cellTypeIndex] = {};
+
+                // Generate fixed positions for each group
+                data.forEach((groupData, groupIndex) => {
+                    dataPointPositions[positionType][cellTypeIndex][groupIndex] =
+                        groupData.map(() => (Math.random() * 16 + 40 - 8));
+                });
+            }
+
+            data.forEach((groupData, groupIndex) => {
+                const boxplotGroup = document.createElement('div');
+                boxplotGroup.className = 'boxplot-group';
+                boxplotGroup.style.position = 'relative';
+
+                // Calculate statistics
+                const sortedData = [...groupData].sort((a, b) => a - b);
+                const min = sortedData[0];
+                const max = sortedData[sortedData.length - 1];
+                const q1 = sortedData[Math.floor(sortedData.length * 0.25)];
+                const median = sortedData[Math.floor(sortedData.length * 0.5)];
+                const q3 = sortedData[Math.floor(sortedData.length * 0.75)];
+
+                // Create box
+                const box = document.createElement('div');
+                box.className = 'box';
+                box.style.top = scale(q3) + 'px';
+                box.style.height = (scale(q1) - scale(q3)) + 'px';
+                box.style.backgroundColor = `rgba(${cellTypeIndex * 70}, ${cellTypeIndex * 50}, ${cellTypeIndex * 20}, 0.15)`;
+
+                // Create whiskers
+                const topWhisker = document.createElement('div');
+                topWhisker.className = 'whisker';
+                topWhisker.style.top = scale(max) + 'px';
+                topWhisker.style.height = (scale(q3) - scale(max)) + 'px';
+
+                const bottomWhisker = document.createElement('div');
+                bottomWhisker.className = 'whisker';
+                bottomWhisker.style.top = scale(q1) + 'px';
+                bottomWhisker.style.height = (scale(min) - scale(q1)) + 'px';
+
+                // Create median line
+                const medianLine = document.createElement('div');
+                medianLine.className = 'median';
+                medianLine.style.top = scale(median) + 'px';
+
+                // Use stored left offsets for data points - these will be consistent across updates
+                const leftOffsets = dataPointPositions[positionType][cellTypeIndex][groupIndex];
+
+                // Add individual data points as circles
+                groupData.forEach((value, i) => {
+                    const dataPoint = document.createElement('div');
+                    dataPoint.className = 'data-point';
+                    dataPoint.style.top = (scale(value) - 3) + 'px'; // Center the circle on the data point
+                    dataPoint.style.left = leftOffsets[i] + 'px'; // Use stored horizontal position
+                    dataPoint.style.backgroundColor = `rgba(${cellTypeIndex * 70}, ${cellTypeIndex * 50}, ${cellTypeIndex * 20}, 0.35)`;
+
+                    // Add sample index as data attribute for hover highlighting
+                    const sampleIndex = groupIndex === 0 ? i : i + group1Size;
+                    dataPoint.dataset.sampleIndex = sampleIndex;
+                    dataPoint.dataset.value = value.toFixed(4);
+
+                    // Add hover functionality to data points
+                    dataPoint.addEventListener('mouseenter', function() {
+                        highlightSample(sampleIndex, true);
+                    });
+
+                    dataPoint.addEventListener('mouseleave', function() {
+                        highlightSample(sampleIndex, false);
+                    });
+
+                    boxplotGroup.appendChild(dataPoint);
+                });
+
+                // Add elements to group
+                boxplotGroup.appendChild(box);
+                boxplotGroup.appendChild(topWhisker);
+                boxplotGroup.appendChild(bottomWhisker);
+                boxplotGroup.appendChild(medianLine);
+
+                // Add group label
+                const label = document.createElement('div');
+                label.textContent = groupNames[groupIndex];
+                label.style.textAlign = 'center';
+                label.style.marginTop = `${boxplotHeight}px`;
+
+                // Append to container
+                boxplotGroup.appendChild(label);
+                container.appendChild(boxplotGroup);
+            });
+
+            // If we have two groups, calculate p-value
+            if (data.length === 2) {
+                const pValue = mannWhitneyUTest(data[0], data[1]);
+                const pValueElement = document.createElement('div');
+                pValueElement.className = 'p-value';
+                pValueElement.textContent = `p-value: ${pValue.toFixed(4)}`;
+                container.appendChild(pValueElement);
+            }
+        }
+
+        // Update statistical analysis
+        function updateStats() {
+            const groupBoxplotsContainer = document.getElementById('group-boxplots');
+            const overallBoxplotsContainer = document.getElementById('overall-boxplots');
+
+            // Clear containers
+            groupBoxplotsContainer.innerHTML = '';
+            overallBoxplotsContainer.innerHTML = '';
+
+            // Cell type labels
+            // const cellTypeLabels = ['Cell Type A', 'Cell Type B', 'Cell Type C', 'Cell Type D'];
+            const cellTypeLabels = ['Cell Type A'];
+
+            // Create sub-containers for each cell type
+            for (let cellTypeIndex = 0; cellTypeIndex < cellTypes; cellTypeIndex++) {
+                // Create containers
+                const groupSubContainer = document.createElement('div');
+                // groupSubContainer.style.marginBottom = '30px';
+                const overallSubContainer = document.createElement('div');
+                // overallSubContainer.style.marginBottom = '30px';
+
+                // Add headers
+                const groupHeader = document.createElement('div');
+                groupHeader.textContent = cellTypeLabels[cellTypeIndex];
+                groupSubContainer.appendChild(groupHeader);
+
+                const overallHeader = document.createElement('div');
+                overallHeader.textContent = cellTypeLabels[cellTypeIndex];
+                overallSubContainer.appendChild(overallHeader);
+
+                // Create boxplot areas
+                const groupBoxplotArea = document.createElement('div');
+                groupBoxplotArea.className = 'boxplot';
+                groupSubContainer.appendChild(groupBoxplotArea);
+
+                const overallBoxplotArea = document.createElement('div');
+                overallBoxplotArea.className = 'boxplot';
+                overallSubContainer.appendChild(overallBoxplotArea);
+
+                // Get data for group comparison
+                const group1Data = proportions.slice(0, group1Size).map(p => p[cellTypeIndex]);
+                const group2Data = proportions.slice(group1Size).map(p => p[cellTypeIndex]);
+
+                // Create grouped boxplots
+                createBoxplot(groupBoxplotArea, [group1Data, group2Data], cellTypeIndex, ['Group 1', 'Group 2'], false);
+
+                // Calculate overall proportions
+                const group1CellCounts = cellCounts.slice(0, group1Size);
+                const group2CellCounts = cellCounts.slice(group1Size);
+
+                // Calculate total number of cells for the current cell type divided by total cells
+                const totalCells = group1CellCounts.reduce((a, b) => a + b, 0) + group2CellCounts.reduce((a, b) => a + b, 0);
+                const group1TotalByType = group1Data.map((p, i) => p * group1CellCounts[i] / totalCells);
+                const group2TotalByType = group2Data.map((p, i) => p * group2CellCounts[i] / totalCells);
+
+                createBoxplot(overallBoxplotArea, [group1TotalByType, group2TotalByType], cellTypeIndex, ['Group 1', 'Group 2'], true);
+
+                // Add to main containers
+                groupBoxplotsContainer.appendChild(groupSubContainer);
+                overallBoxplotsContainer.appendChild(overallSubContainer);
+                break;
+            }
+        }
+
+        // Initialize the visualization
+        function init() {
+            setupCellCountDrag();
+            setupProportionDrag();
+            updateCellCountBars(); // Initialize cell count bar heights
+            updateStats();
+        }
+
+        // Start the visualization when the page loads
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>
